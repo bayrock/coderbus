@@ -8,10 +8,23 @@ client.on('ready', () => {
 })
 
 const luaregex = /^```Lua\n(.+)```$/s
+const prints = `
+local prints = {}
+function print(msg)
+  table.insert(prints, msg)
+end
+`
 client.on('messageCreate', (msg) => {
-    const match = msg.content.match(luaregex)
-    if(match)
-        msg.reply(luaEnv.parse(match[1]).exec())
+  const match = msg.content.match(luaregex)
+  if(!match) return
+  try {
+    const parsed = luaEnv.parse(`${prints} ${match[1]} return table.concat(prints, "\\n")`).exec() || undefined
+    if (parsed != undefined)
+      msg.reply(parsed)
+  } catch (error) {
+    msg.reply(error ? `**${error.name}:** ${error.message}` : "Error parsing Lua block!")
+    .catch(console.error)
+  }
 })
 
 client.on('interactionCreate', async interaction => {
@@ -24,3 +37,4 @@ client.on('interactionCreate', async interaction => {
 client.login(credentials.token)
 
 require("./commands")() // Register application commands
+// require("./express")() // Start Express server (for glitch.me)
