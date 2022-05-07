@@ -7,7 +7,7 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
 })
 
-const luaregex = /^```Lua\n(.+)```$/s
+const luaregex = /^```Lua\n(.+)```$/si
 const prints = `
 local prints = {}
 function print(msg)
