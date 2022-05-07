@@ -1,4 +1,5 @@
 const luaEnv = require('lua-in-js').createEnv()
+const jsSandbox = require('sandbox')
 const credentials = require("./credentials.json")
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
@@ -7,7 +8,7 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
 })
 
-const luaregex = /^```Lua\n(.+)```$/si
+const coderegex = /^```(Lua|JS)\n(.+)```$/si
 const prints = `
 local prints = {}
 function print(msg)
@@ -15,16 +16,32 @@ function print(msg)
   table.insert(prints, msg)
 end
 `
+
+const jsEnv = new jsSandbox()
+
 client.on('messageCreate', (msg) => {
-  const match = msg.content.match(luaregex)
+  const match = msg.content.match(coderegex)
   if(!match) return
+
+  const lang = match[1]
+  const code = match[2]
+
   try {
-    const parsed = luaEnv.parse(`${prints} ${match[1]} return table.concat(prints, "\\n")`).exec() || undefined
-    if (parsed != undefined)
-      msg.reply(parsed)
+    switch (lang.toLowerCase()) {
+      case "lua":
+        const parsed = luaEnv.parse(`${prints} ${code} return table.concat(prints, "\\n")`).exec() || undefined
+        if (parsed != undefined)
+          msg.reply(parsed)
+        break
+      case "js":
+        jsEnv.run(code, (parsed) => msg.reply(parsed.console.join("\n")).catch(console.error))
+        break
+      default:
+        return "Language not supported!"
+    }
   } catch (error) {
-    msg.reply(error ? `**${error.name}:** ${error.message}` : "Error parsing Lua block!")
-    .catch(console.error)
+    msg.reply(error ? `**${error.name}:** ${error.message}` : "Error parsing code block!")
+      .catch(console.error)
   }
 })
 
