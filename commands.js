@@ -6,14 +6,17 @@ module.exports = () => {
     const credentials = require("./credentials.json")
 
     const commands = [
-        new SlashCommandBuilder().setName('help').setDescription('Help command'),
+        new SlashCommandBuilder().setName('help').setDescription('View the command list'),
+        new SlashCommandBuilder().setName('avatar').setDescription('Avatar command')
+                .addMentionableOption(option => option.setName('user').setDescription('Mention a user to grab an avatar').setRequired(false))
+                .addStringOption(option => option.setName('id').setDescription('Use an ID to grab an avatar').setRequired(false))
     ].map(command => command.toJSON())
-    
+
     const rest = new REST({ version: '10' }).setToken(credentials.token)
-    
+
     rest.put(Routes.applicationGuildCommands(credentials.clientid, credentials.guildid), { body: commands })
-	.then(() => console.log('Successfully registered application commands.'))
-	.catch(console.error)
+    .then(() => console.log('Successfully registered application commands.'))
+    .catch(console.error)
         
     // require("./express")() // Initialize the express server for glitch.me
 }

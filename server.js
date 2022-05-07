@@ -11,6 +11,7 @@ const luaregex = /^```Lua\n(.+)```$/si
 const prints = `
 local prints = {}
 function print(msg)
+  assert(#prints < 500, string.format("Reached print limit: %d!", #prints))
   table.insert(prints, msg)
 end
 `
@@ -28,10 +29,24 @@ client.on('messageCreate', (msg) => {
 })
 
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return
+  if (!interaction.isCommand()) return
 
-    if (interaction.commandName === 'help')
-        await interaction.reply('This bot is a work in progress..')
+  if (interaction.commandName === 'help')
+    interaction.guild.commands.fetch()
+      .then(commands => 
+        interaction.reply("**Commands:** \n" + commands.map(command => `/${command.name} [${command.options.map((option) => option.name)}] - ${command.description}`).join("\n")))
+      .catch(console.error)
+
+  if (interaction.commandName === 'avatar') {
+    const mentioned = interaction.options.getMentionable("user")
+    const id = interaction.options.getString("id")
+    if (mentioned)
+      await interaction.reply(mentioned.user.avatarURL({size: 2048}))
+    else if (id)
+      client.users.fetch(id).then(user => interaction.reply(user.avatarURL({size: 2048})))
+    else
+      await interaction.reply(interaction.member.user.avatarURL({size: 2048}))
+  }
 })
 
 client.login(credentials.token)
