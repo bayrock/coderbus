@@ -75,7 +75,7 @@ client.on('interactionCreate', async interaction => {
 
     const response = await fetch(url)
     const data = await response.json()
-    await interaction.reply(`\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``)
+    await interaction.reply(`\`\`\`json\n${JSON.stringify(data[0] ? data[0] : data, null, 2)}\n\`\`\``)
   }
 })
 
