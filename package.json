@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "experimental": "node server.js --experimental-fetch"
   },
   "author": "Bayrock",
   "license": "MIT",
@@ -14,6 +15,7 @@
     "discord-api-types": "^0.32.1",
     "discord.js": "^13.6.0",
     "lua-in-js": "^2.2.0",
+    "node-fetch": "^3.2.4",
     "sandbox": "^0.8.6"
   }
 }

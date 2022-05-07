@@ -1,8 +1,9 @@
 const luaEnv = require('lua-in-js').createEnv()
 const jsSandbox = require('sandbox')
-const credentials = require("./credentials.json")
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
+const credentials = require("./credentials.json")
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
@@ -18,6 +19,7 @@ end
 `
 
 const jsEnv = new jsSandbox()
+jsEnv.on('message', console.log)
 
 client.on('messageCreate', (msg) => {
   const match = msg.content.match(coderegex)
@@ -34,7 +36,9 @@ client.on('messageCreate', (msg) => {
           msg.reply(parsed)
         break
       case "js":
-        jsEnv.run(code, (parsed) => msg.reply(parsed.console.join("\n")).catch(console.error))
+        jsEnv.run(code, (parsed) => {
+          msg.reply(parsed.console.join("\n")).catch(console.error) 
+        })
         break
       default:
         return "Language not supported!"
@@ -63,6 +67,15 @@ client.on('interactionCreate', async interaction => {
       client.users.fetch(id).then(user => interaction.reply(user.avatarURL({size: 2048})))
     else
       await interaction.reply(interaction.member.user.avatarURL({size: 2048}))
+  }
+
+  if (interaction.commandName === 'fetch') {
+    const url = interaction.options.getString("url")
+    if (!url) return interaction.reply("URL not found!")
+
+    const response = await fetch(url)
+    const data = await response.json()
+    await interaction.reply(`\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``)
   }
 })
 
