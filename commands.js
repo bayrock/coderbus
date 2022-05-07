@@ -9,7 +9,9 @@ module.exports = () => {
         new SlashCommandBuilder().setName('help').setDescription('View the command list'),
         new SlashCommandBuilder().setName('avatar').setDescription('Avatar command')
                 .addMentionableOption(option => option.setName('user').setDescription('Mention a user to grab an avatar').setRequired(false))
-                .addStringOption(option => option.setName('id').setDescription('Use an ID to grab an avatar').setRequired(false))
+                .addStringOption(option => option.setName('id').setDescription('Use an ID to grab an avatar').setRequired(false)),
+        new SlashCommandBuilder().setName('fetch').setDescription('Fetch command')
+                .addStringOption(option => option.setName('url').setDescription('Enter an API endpoint to fetch').setRequired(true))
     ].map(command => command.toJSON())
 
     const rest = new REST({ version: '10' }).setToken(credentials.token)
