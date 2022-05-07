@@ -1,7 +1,7 @@
 {
-  "name": "lua-in-discord",
+  "name": "coderbus",
   "version": "1.0.0",
-  "description": "Bayrock's Discord bot",
+  "description": "Coderbus Discord bot",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
