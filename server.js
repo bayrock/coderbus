@@ -1,5 +1,6 @@
 const luaEnv = require('lua-in-js').createEnv()
 const jsSandbox = require('sandbox')
+const bfSandbox = require('brainfuck-node');
 var schemeEnv = require("biwascheme")
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
@@ -10,7 +11,7 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
 })
 
-const coderegex = /^```(Lua|JS|Scheme|Lisp)\n(.+)```$/si
+const coderegex = /^```(Lua|JavaScript|JS|Scheme|Lisp|BF|Brainfuck)\n(.+)```$/si
 const prints = `
 local prints = {}
 function print(msg)
@@ -22,6 +23,8 @@ end
 const jsEnv = new jsSandbox()
 jsEnv.on('message', console.log)
 
+const fuckEnv = new bfSandbox()
+
 client.on('messageCreate', (msg) => {
   const match = msg.content.match(coderegex)
   if(!match) return
@@ -32,18 +35,25 @@ client.on('messageCreate', (msg) => {
   try {
     switch (lang.toLowerCase()) {
       case "lua":
-        const parsed = luaEnv.parse(`${prints} ${code} return table.concat(prints, "\\n")`).exec() || undefined
+        const luaParsed = luaEnv.parse(`${prints} ${code} return table.concat(prints, "\\n")`).exec() || undefined
         if (parsed != undefined)
-          msg.reply(parsed)
+          msg.reply(luaParsed)
         break
       case "js":
-        jsEnv.run(code, (parsed) => {
-          msg.reply(parsed.console.join("\n")).catch(console.error) 
+      case "javascript":
+        jsEnv.run(code, (jsParsed) => {
+          msg.reply(jsParsed.console.join("\n")).catch(console.error) 
         })
         break
         case "lisp":
         case "scheme":
           msg.reply(schemeEnv.run(code).toString())
+          break
+        case "bf":
+        case "brainfuck":
+          const bfParsed = fuckEnv.execute(code)
+          // console.log(bfParsed)
+          msg.reply(bfParsed.output)
           break
       default:
         return "Language not supported!"
