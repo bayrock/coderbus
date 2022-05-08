@@ -1,5 +1,6 @@
 const luaEnv = require('lua-in-js').createEnv()
 const jsSandbox = require('sandbox')
+var schemeEnv = require("biwascheme")
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
@@ -9,7 +10,7 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
 })
 
-const coderegex = /^```(Lua|JS)\n(.+)```$/si
+const coderegex = /^```(Lua|JS|Scheme|Lisp)\n(.+)```$/si
 const prints = `
 local prints = {}
 function print(msg)
@@ -40,6 +41,10 @@ client.on('messageCreate', (msg) => {
           msg.reply(parsed.console.join("\n")).catch(console.error) 
         })
         break
+        case "lisp":
+        case "scheme":
+          msg.reply(schemeEnv.run(code).toString())
+          break
       default:
         return "Language not supported!"
     }

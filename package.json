@@ -12,6 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "@discordjs/rest": "^0.4.1",
+    "biwascheme": "^0.7.5",
     "discord-api-types": "^0.32.1",
     "discord.js": "^13.6.0",
     "lua-in-js": "^2.2.0",
