@@ -8,6 +8,10 @@
     "start": "node server.js",
     "experimental": "node server.js --experimental-fetch"
   },
+  "repository": {
+		"type": "git",
+		"url": "https://github.com/bayrock/coderbus"
+	},
   "author": "Bayrock",
   "license": "MIT",
   "dependencies": {

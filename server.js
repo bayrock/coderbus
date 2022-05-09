@@ -77,6 +77,9 @@ client.on('interactionCreate', async interaction => {
         interaction.reply("**Commands:** \n" + commands.map(command => `/${command.name} [${command.options.map((option) => option.name)}] - ${command.description}`).join("\n")))
       .catch(console.error)
 
+  if (interaction.commandName === 'repo')
+    await interaction.reply("https://github.com/bayrock/coderbus")
+
   if (interaction.commandName === 'avatar') {
     const mentioned = interaction.options.getMentionable("user")
     const id = interaction.options.getString("id")
