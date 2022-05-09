@@ -26,6 +26,12 @@ function getErrorMessage(error) {
   return error ? `**${error.name}:** ${error.message}` : "Error parsing code block!"
 }
 
+function getParsedMessage(parsed) {
+  const { language, version, run } = parsed
+  const output = run.output || run.stdout || run.stderr
+  return version ? `**Parsed ${language} (v${version}):**\n\`${output}\`` : `**Parsed ${language}:**\n\`${output}\``
+}
+
 const coderegex = /^```(.+?)\n(.+)```$/si
 
 client.on('ready', () => {
@@ -43,15 +49,17 @@ client.on('messageCreate', (msg) => {
     switch (lang.toLowerCase()) {
         case "lisp":
         case "scheme":
-          msg.reply(`**Parsed ${lang}:**\n${schemeEnv.run(code).toString()}`)
+          msg.parsed = getParsedMessage({language: "scheme (Lisp)", run: {output: schemeEnv.run(code).toString()}})
+          msg.reply(msg.parsed)
           break
         case "apl":
-          msg.reply(aplEnv(code).toString())
+          msg.parsed = getParsedMessage({language: lang, run: {output: aplEnv(code).toString()}})
+          msg.reply(msg.parsed)
           break
         default:
           firePiston(lang, code)
-            .then(parsed => msg.reply(`**Parsed ${parsed.language} (v${parsed.version}):**\n\`${parsed.run.output || parsed.run.stdout}\``))
-            .catch((error) => msg.reply(getErrorMessage(error)))
+            .then(parsed => msg.reply(getParsedMessage(parsed)))
+            .catch(error => msg.reply(getErrorMessage(error)))
           break
     }
   } catch (error) {
@@ -90,7 +98,7 @@ client.on('interactionCreate', async interaction => {
   }
 })
 
-client.login(credentials.token)
-
 require("./commands")() // Register application commands
-// require("./express")() // Start Express server (for glitch.me)
+// require("./express")() // Initialize Express server (for glitch.me)
+
+client.login(credentials.token) // Initialize Discord bot
