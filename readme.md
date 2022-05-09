@@ -1,7 +1,7 @@
 # coderbus
 #### [Discord.js](https://discord.js.org/) bot for handling multi-paradigm code parsing and data fetching
 
-###### Detect and parse markdown code blocks directly from Discord..
+###### Interpret/compile markdown code blocks directly from Discord..
 
 ### Disclaimer:
 - This project consists of an experimental bot, and is intended only for educational purposes.
