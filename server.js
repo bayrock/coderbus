@@ -1,29 +1,36 @@
-const luaEnv = require('lua-in-js').createEnv()
-const jsSandbox = require('sandbox')
-const bfSandbox = require('brainfuck-node');
-var schemeEnv = require("biwascheme")
+const aplEnv = require('apl')
+const schemeEnv = require("biwascheme")
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
+const { post, fetch } = require("./post")
 const credentials = require("./credentials.json")
+
+const piston = []
+
+fetch("https://emkc.org/api/v2/piston/runtimes")
+  .then(response => response.json())
+  .then(runtime => piston.push(...runtime))
+  .catch(console.error)
+
+function firePiston(alias, code) {
+  for (const lang of piston) {
+    const aliases = [lang.language, ...lang.aliases]
+    if (!aliases.includes(alias)) continue
+
+    return post("https://emkc.org/api/v2/piston/execute", {language: lang.language, version: lang.version, files: [{content: code}]})
+  }
+  return Promise.reject(new Error(`${alias} unsupported!`))
+}
+
+function getErrorMessage(error) {
+  return error ? `**${error.name}:** ${error.message}` : "Error parsing code block!"
+}
+
+const coderegex = /^```(.+?)\n(.+)```$/si
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
 })
-
-const coderegex = /^```(Lua|JavaScript|JS|Scheme|Lisp|BF|Brainfuck)\n(.+)```$/si
-const prints = `
-local prints = {}
-function print(msg)
-  assert(#prints < 500, string.format("Reached print limit: %d!", #prints))
-  table.insert(prints, msg)
-end
-`
-
-const jsEnv = new jsSandbox()
-jsEnv.on('message', console.log)
-
-const fuckEnv = new bfSandbox()
 
 client.on('messageCreate', (msg) => {
   const match = msg.content.match(coderegex)
@@ -34,32 +41,21 @@ client.on('messageCreate', (msg) => {
 
   try {
     switch (lang.toLowerCase()) {
-      case "lua":
-        const luaParsed = luaEnv.parse(`${prints} ${code} return table.concat(prints, "\\n")`).exec() || undefined
-        if (parsed != undefined)
-          msg.reply(luaParsed)
-        break
-      case "js":
-      case "javascript":
-        jsEnv.run(code, (jsParsed) => {
-          msg.reply(jsParsed.console.join("\n")).catch(console.error) 
-        })
-        break
         case "lisp":
         case "scheme":
-          msg.reply(schemeEnv.run(code).toString())
+          msg.reply(`**Parsed ${lang}:**\n${schemeEnv.run(code).toString()}`)
           break
-        case "bf":
-        case "brainfuck":
-          const bfParsed = fuckEnv.execute(code)
-          // console.log(bfParsed)
-          msg.reply(bfParsed.output)
+        case "apl":
+          msg.reply(aplEnv(code).toString())
           break
-      default:
-        return "Language not supported!"
+        default:
+          firePiston(lang, code)
+            .then(parsed => msg.reply(`**Parsed ${parsed.language} (v${parsed.version}):**\n\`${parsed.run.output || parsed.run.stdout}\``))
+            .catch((error) => msg.reply(getErrorMessage(error)))
+          break
     }
   } catch (error) {
-    msg.reply(error ? `**${error.name}:** ${error.message}` : "Error parsing code block!")
+    msg.reply(getErrorMessage(error))
       .catch(console.error)
   }
 })
