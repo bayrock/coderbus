@@ -4,16 +4,21 @@ const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
 const { post, fetch } = require("./post")
 const credentials = require("./credentials.json")
+const package = require("./package.json")
 
-const piston = []
+const pistonLanguages = []
+const otherLanguages = {
+  scheme: {language: "scheme", version: package.dependencies.biwascheme.substring(1), run: {output: ""}},
+  apl: {language: "apl", version: package.dependencies.apl.substring(1), run: {output: ""}}
+}
 
 fetch("https://emkc.org/api/v2/piston/runtimes")
   .then(response => response.json())
-  .then(runtime => piston.push(...runtime))
+  .then(runtime => pistonLanguages.push(...runtime))
   .catch(console.error)
 
 function firePiston(alias, code) {
-  for (const lang of piston) {
+  for (const lang of pistonLanguages) {
     const aliases = [lang.language, ...lang.aliases]
     if (!aliases.includes(alias)) continue
 
@@ -26,10 +31,14 @@ function getErrorMessage(error) {
   return error ? `**${error.name}:** ${error.message}` : "Error parsing code block!"
 }
 
+function getPrettyLanguage(language, version) {
+  return version ? `${language} (v${version})` : language
+}
+
 function getParsedMessage(parsed) {
   const { language, version, run } = parsed
   const output = run.output || run.stdout || run.stderr
-  return version ? `**Parsed ${language} (v${version}):**\n\`${output}\`` : `**Parsed ${language}:**\n\`${output}\``
+  return `**Parsed ${getPrettyLanguage(language, version)}:**\n\`${output}\``
 }
 
 const coderegex = /^```(.+?)\n(.+)```$/si
@@ -49,11 +58,15 @@ client.on('messageCreate', (msg) => {
     switch (lang.toLowerCase()) {
         case "lisp":
         case "scheme":
-          msg.parsed = getParsedMessage({language: "scheme (Lisp)", run: {output: schemeEnv.run(code).toString()}})
+          msg.lang = otherLanguages.scheme
+          msg.lang.run.output = schemeEnv.run(code).toString()
+          msg.parsed = getParsedMessage(msg.lang)
           msg.reply(msg.parsed)
           break
         case "apl":
-          msg.parsed = getParsedMessage({language: lang, run: {output: aplEnv(code).toString()}})
+          msg.lang = otherLanguages.apl
+          msg.lang.run.output = aplEnv(code).toString()
+          msg.parsed = getParsedMessage(msg.lang)
           msg.reply(msg.parsed)
           break
         default:
@@ -79,6 +92,9 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'repo')
     await interaction.reply("https://github.com/bayrock/coderbus")
+
+  if (interaction.commandName === 'languages')
+    await interaction.reply(`**We support the following languages:**\n\`\`\`${[...pistonLanguages, otherLanguages.scheme, otherLanguages.apl].map(lang => getPrettyLanguage(lang.language, lang.version)).join(", ")}\`\`\``)
 
   if (interaction.commandName === 'avatar') {
     const mentioned = interaction.options.getMentionable("user")

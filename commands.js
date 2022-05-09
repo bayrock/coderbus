@@ -8,6 +8,7 @@ module.exports = () => {
     const commands = [
         new SlashCommandBuilder().setName('help').setDescription('View the command list'),
         new SlashCommandBuilder().setName('repo').setDescription('View the GitHub repo'),
+        new SlashCommandBuilder().setName('languages').setDescription('View the supported languages'),
         new SlashCommandBuilder().setName('avatar').setDescription('Avatar command')
                 .addMentionableOption(option => option.setName('user').setDescription('Mention a user to grab an avatar').setRequired(false))
                 .addStringOption(option => option.setName('id').setDescription('Use an ID to grab an avatar').setRequired(false)),
