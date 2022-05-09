@@ -12,12 +12,10 @@
   "license": "MIT",
   "dependencies": {
     "@discordjs/rest": "^0.4.1",
+    "apl": "^0.1.15",
     "biwascheme": "^0.7.5",
-    "brainfuck-node": "^1.0.2",
     "discord-api-types": "^0.32.1",
     "discord.js": "^13.6.0",
-    "lua-in-js": "^2.2.0",
-    "node-fetch": "^3.2.4",
-    "sandbox": "^0.8.6"
+    "node-fetch": "^3.2.4"
   }
 }
