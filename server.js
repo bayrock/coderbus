@@ -2,29 +2,32 @@ const aplEnv = require('apl')
 const schemeEnv = require("biwascheme")
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
+const { codeMenu, codeEmbed } = require('./components')
 const { post, fetch } = require("./post")
 const credentials = require("./credentials.json")
 const package = require("./package.json")
 
-const pistonLanguages = []
-const otherLanguages = {
+const pistonRuntimes = []
+const otherRuntimes = {
   scheme: {language: "scheme", version: package.dependencies.biwascheme.substring(1), run: {output: ""}},
   apl: {language: "apl", version: package.dependencies.apl.substring(1), run: {output: ""}}
 }
 
 fetch("https://emkc.org/api/v2/piston/runtimes")
   .then(response => response.json())
-  .then(runtime => pistonLanguages.push(...runtime))
+  .then(runtime => pistonRuntimes.push(...runtime))
   .catch(console.error)
 
 function firePiston(alias, code) {
-  for (const lang of pistonLanguages) {
-    const aliases = [lang.language, ...lang.aliases]
+  for (const runtime of pistonRuntimes) {
+    const aliases = [runtime.language, ...runtime.aliases]
     if (!aliases.includes(alias)) continue
 
-    return post("https://emkc.org/api/v2/piston/execute", {language: lang.language, version: lang.version, files: [{content: code}]})
+    runtime.run = {callback: () => post("https://emkc.org/api/v2/piston/execute", {language: runtime.language, version: runtime.version, files: [{content: code}]})}
+    return runtime
   }
-  return Promise.reject(new Error(`${alias} unsupported!`))
+  // throw new Error(`${alias} unsupported!`)
+  return null
 }
 
 function getErrorMessage(error) {
@@ -51,39 +54,63 @@ client.on('messageCreate', (msg) => {
   const match = msg.content.match(coderegex)
   if(!match) return
 
-  const lang = match[1]
-  const code = match[2]
+  const [_, alias, code] = match
 
   try {
-    switch (lang.toLowerCase()) {
+    switch (alias.toLowerCase()) {
         case "lisp":
         case "scheme":
-          msg.lang = otherLanguages.scheme
-          msg.lang.run.output = schemeEnv.run(code).toString()
-          msg.parsed = getParsedMessage(msg.lang)
-          msg.reply(msg.parsed)
+          otherRuntimes.scheme.run.callback = () => schemeEnv.run(code).toString()
+          msg.author.request = otherRuntimes.scheme
           break
         case "apl":
-          msg.lang = otherLanguages.apl
-          msg.lang.run.output = aplEnv(code).toString()
-          msg.parsed = getParsedMessage(msg.lang)
-          msg.reply(msg.parsed)
+          otherRuntimes.apl.run.callback = () => aplEnv(code).toString()
+          msg.author.request = otherRuntimes.apl
           break
         default:
-          firePiston(lang, code)
-            .then(parsed => msg.reply(getParsedMessage(parsed)))
-            .catch(error => msg.reply(getErrorMessage(error)))
+          msg.author.request = firePiston(alias, code)
           break
     }
+
+    if (msg.author.request)
+      return msg.reply({embeds: [codeEmbed], components: [codeMenu]})
   } catch (error) {
     msg.reply(getErrorMessage(error))
       .catch(console.error)
   }
 })
 
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return
 
+client.on('interactionCreate', async interaction => {
+  if (interaction.isButton())
+    return handleButtons(interaction)
+
+  if (interaction.isCommand())
+    return handleCommands(interaction)
+})
+
+async function handleButtons(interaction) {
+  if (interaction.customId === "no")
+    return await interaction.message.delete()
+
+  if (interaction.customId !== "yes")
+    return
+
+  const { user } = interaction
+  if (!user.request) return await interaction.message.delete()
+
+  if (otherRuntimes[user.request.language])
+    user.request.run.output = user.request.run.callback()
+  else
+    user.request = await user.request.run.callback()
+
+  user.response = getParsedMessage(user.request)
+  user.request = null
+
+  await interaction.update({content: user.response, embeds: [], components: []})
+}
+
+async function handleCommands(interaction) {
   if (interaction.commandName === 'help')
     interaction.guild.commands.fetch()
       .then(commands => 
@@ -94,7 +121,7 @@ client.on('interactionCreate', async interaction => {
     await interaction.reply("https://github.com/bayrock/coderbus")
 
   if (interaction.commandName === 'languages')
-    await interaction.reply(`**We support the following languages:**\n\`\`\`${[...pistonLanguages, otherLanguages.scheme, otherLanguages.apl].map(lang => getPrettyLanguage(lang.language, lang.version)).join(", ")}\`\`\``)
+    await interaction.reply(`**We support the following languages:**\n\`\`\`${[...pistonRuntimes, otherRuntimes.scheme, otherRuntimes.apl].map(runtime => getPrettyLanguage(runtime.language, runtime.version)).join(", ")}\`\`\``)
 
   if (interaction.commandName === 'avatar') {
     const mentioned = interaction.options.getMentionable("user")
@@ -115,7 +142,7 @@ client.on('interactionCreate', async interaction => {
     const data = await response.json()
     await interaction.reply(`\`\`\`json\n${JSON.stringify(data[0] ? data[0] : data, null, 2)}\n\`\`\``)
   }
-})
+}
 
 require("./commands")() // Register application commands
 // require("./express")() // Initialize Express server (for glitch.me)
