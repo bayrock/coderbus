@@ -96,7 +96,7 @@ async function handleButtons(interaction) {
   if (interaction.customId !== "yes")
     return
 
-  const { user } = interaction
+  const user = interaction.message.mentions.repliedUser
   if (!user.request) return await interaction.message.delete()
 
   if (otherRuntimes[user.request.language])
