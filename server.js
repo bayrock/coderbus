@@ -137,9 +137,11 @@ async function handleCommands(interaction) {
     const url = interaction.options.getString("url")
     if (!url) return interaction.reply("URL not found!")
 
+    const invisible = interaction.options.getBoolean("invisible")
+    await interaction.deferReply({ephemeral: invisible ?? true})
     const response = await fetch(url)
     const data = await response.json()
-    await interaction.reply(`\`\`\`json\n${JSON.stringify(data[0] ? data[0] : data, null, 2)}\n\`\`\``)
+    await interaction.editReply(`\`\`\`json\n${JSON.stringify(data[0] ? data[0] : data, null, 2)}\n\`\`\``)
   }
 }
 
