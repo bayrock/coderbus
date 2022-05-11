@@ -83,10 +83,10 @@ client.on('messageCreate', (msg) => {
 
 client.on('interactionCreate', async interaction => {
   if (interaction.isButton())
-    return handleButtons(interaction)
+    return await handleButtons(interaction)
 
   if (interaction.isCommand())
-    return handleCommands(interaction)
+    return await handleCommands(interaction)
 })
 
 async function handleButtons(interaction) {
@@ -111,11 +111,10 @@ async function handleButtons(interaction) {
 }
 
 async function handleCommands(interaction) {
-  if (interaction.commandName === 'help')
-    interaction.guild.commands.fetch()
-      .then(commands => 
-        interaction.reply("**Commands:** \n" + commands.map(command => `/${command.name} [${command.options.map((option) => option.name)}] - ${command.description}`).join("\n")))
-      .catch(console.error)
+  if (interaction.commandName === 'help') {
+    const commands = await interaction.guild.commands.fetch()
+    await interaction.reply("**Commands:** \n" + commands.map(command => `/${command.name} [${command.options.map((option) => option.name)}] - ${command.description}`).join("\n"))
+  }
 
   if (interaction.commandName === 'repo')
     await interaction.reply("https://github.com/bayrock/coderbus")
