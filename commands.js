@@ -14,6 +14,7 @@ module.exports = () => {
                 .addStringOption(option => option.setName('id').setDescription('Use an ID to grab an avatar').setRequired(false)),
         new SlashCommandBuilder().setName('fetch').setDescription('Fetch command')
                 .addStringOption(option => option.setName('url').setDescription('Enter an API endpoint to fetch').setRequired(true))
+                .addBooleanOption(option => option.setName('invisible').setDescription('Toggle the visibility of the response').setRequired(false))
     ].map(command => command.toJSON())
 
     const rest = new REST({ version: '10' }).setToken(credentials.token)
