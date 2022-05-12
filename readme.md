@@ -14,5 +14,6 @@
 - [Piston](https://github.com/engineer-man/piston) - Supports code execution for [many languages](https://github.com/engineer-man/piston#supported-languages)
 - [node-apl](https://github.com/PlanetAPL/node-apl) - Supports code execution for [APL](https://tryapl.org/)
 - [biwascheme](https://www.biwascheme.org/) - Supports code execution for [Scheme](https://www.scheme.com/tspl4/) (Lisp)
+- [vm2](https://github.com/patriksimek/vm2) - NodeJS sandbox for running untrusted code
 
 ##### A full list of dependencies can be seen [here](https://github.com/bayrock/coderbus/network/dependencies).
