@@ -1,19 +1,19 @@
 const aplEnv = require('apl')
-const schemeEnv = require("biwascheme")
+const schemeEnv = require('biwascheme')
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
-const { codeMenu, codeEmbed } = require('./components')
-const { post, fetch } = require("./post")
-const credentials = require("./credentials.json")
-const package = require("../package.json")
+const { codeMenu, codeEmbed, richEmbed } = require('./embeds')
+const { post, fetch } = require('./post')
+const credentials = require('./credentials.json')
+const package = require('../package.json')
 
 const pistonRuntimes = []
 const otherRuntimes = {
-  scheme: {language: "scheme", version: package.dependencies.biwascheme.substring(1), run: {output: ""}},
-  apl: {language: "apl", version: package.dependencies.apl.substring(1), run: {output: ""}}
+  scheme: {language: 'scheme', version: package.dependencies.biwascheme.substring(1), run: {output: ''}},
+  apl: {language: 'apl', version: package.dependencies.apl.substring(1), run: {output: ''}}
 }
 
-fetch("https://emkc.org/api/v2/piston/runtimes")
+fetch('https://emkc.org/api/v2/piston/runtimes')
   .then(response => response.json())
   .then(runtime => pistonRuntimes.push(...runtime))
   .catch(console.error)
@@ -23,7 +23,7 @@ function firePiston(alias, code) {
     const aliases = [runtime.language, ...runtime.aliases]
     if (!aliases.includes(alias)) continue
 
-    runtime.run = {callback: () => post("https://emkc.org/api/v2/piston/execute", {language: runtime.language, version: runtime.version, files: [{content: code}]})}
+    runtime.run = {callback: () => post('https://emkc.org/api/v2/piston/execute', {language: runtime.language, version: runtime.version, files: [{content: code}]})}
     return runtime
   }
   // throw new Error(`${alias} unsupported!`)
@@ -31,17 +31,11 @@ function firePiston(alias, code) {
 }
 
 function getErrorMessage(error) {
-  return error ? `**${error.name}:** ${error.message}` : "Error parsing code block!"
+  return error ? `**${error.name}:** ${error.message}` : 'Error parsing code block!'
 }
 
 function getPrettyLanguage(language, version) {
   return version ? `${language} (v${version})` : language
-}
-
-function getParsedMessage(parsed) {
-  const { language, version, run } = parsed
-  const output = run.output || run.stdout || run.stderr
-  return `**Parsed ${getPrettyLanguage(language, version)}:**\n\`${output}\``
 }
 
 const coderegex = /^```(.+?)\n(.+)```$/si
@@ -58,12 +52,12 @@ client.on('messageCreate', (msg) => {
 
   try {
     switch (alias.toLowerCase()) {
-        case "lisp":
-        case "scheme":
+        case 'lisp':
+        case 'scheme':
           otherRuntimes.scheme.run.callback = () => schemeEnv.run(code).toString()
           msg.author.request = otherRuntimes.scheme
           break
-        case "apl":
+        case 'apl':
           otherRuntimes.apl.run.callback = () => aplEnv(code).toString()
           msg.author.request = otherRuntimes.apl
           break
@@ -90,10 +84,10 @@ client.on('interactionCreate', async interaction => {
 })
 
 async function handleButtons(interaction) {
-  if (interaction.customId === "no")
+  if (interaction.customId === 'no')
     return await interaction.message.delete()
 
-  if (interaction.customId !== "yes")
+  if (interaction.customId !== 'yes')
     return
 
   const user = interaction.message.mentions.repliedUser
@@ -104,27 +98,31 @@ async function handleButtons(interaction) {
   else
     user.request = await user.request.run.callback()
 
-  user.response = getParsedMessage(user.request)
+  const { language, version, run } = user.request
+  user.response = richEmbed(`Parsed ${getPrettyLanguage(language, version)}`, run.output || run.stdout || run.stderr)
   user.request = null
 
-  await interaction.update({content: user.response, embeds: [], components: []})
+  await interaction.update({embeds: [user.response], components: []})
 }
 
 async function handleCommands(interaction) {
   if (interaction.commandName === 'help') {
     const commands = await interaction.guild.commands.fetch()
-    await interaction.reply("**Commands:** \n" + commands.map(command => `/${command.name} [${command.options.map((option) => option.name)}] - ${command.description}`).join("\n"))
+    const commandList = richEmbed('Commands:', commands.map(command => `/${command.name} [${command.options.map((option) => option.name)}] - ${command.description}`).join('\n'))
+    await interaction.reply({embeds: [commandList], ephemeral: true})
   }
 
   if (interaction.commandName === 'repo')
-    await interaction.reply("https://github.com/bayrock/coderbus")
+    await interaction.reply('https://github.com/bayrock/coderbus')
 
-  if (interaction.commandName === 'languages')
-    await interaction.reply(`**We support the following languages:**\n\`\`\`${[...pistonRuntimes, otherRuntimes.scheme, otherRuntimes.apl].map(runtime => getPrettyLanguage(runtime.language, runtime.version)).join(", ")}\`\`\``)
+  if (interaction.commandName === 'languages') {
+    const languageList = richEmbed('Supported languages:', [...pistonRuntimes, otherRuntimes.scheme, otherRuntimes.apl].map(runtime => getPrettyLanguage(runtime.language, runtime.version)).join(', '))
+    await interaction.reply({embeds: [languageList], ephemeral: true})
+  }
 
   if (interaction.commandName === 'avatar') {
-    const mentioned = interaction.options.getMentionable("user")
-    const id = interaction.options.getString("id")
+    const mentioned = interaction.options.getMentionable('user')
+    const id = interaction.options.getString('id')
     if (mentioned)
       await interaction.reply(mentioned.user.avatarURL({size: 2048}))
     else if (id)
@@ -134,10 +132,10 @@ async function handleCommands(interaction) {
   }
 
   if (interaction.commandName === 'fetch') {
-    const url = interaction.options.getString("url")
-    if (!url) return interaction.reply("URL not found!")
+    const url = interaction.options.getString('url')
+    if (!url) return interaction.reply('URL not found!')
 
-    const invisible = interaction.options.getBoolean("invisible")
+    const invisible = interaction.options.getBoolean('invisible')
     await interaction.deferReply({ephemeral: invisible ?? true})
     const response = await fetch(url)
     const data = await response.json()
@@ -145,7 +143,7 @@ async function handleCommands(interaction) {
   }
 }
 
-require("./commands")() // Register application commands
-// require("./express")() // Initialize Express server (for glitch.me)
+require('./commands')() // Register application commands
+// require('./express')() // Initialize Express server (for glitch.me)
 
 client.login(credentials.token) // Initialize Discord bot
