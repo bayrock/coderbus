@@ -1,7 +1,7 @@
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js')
 
 const colors = {
-  brand: '#8e7e9b',
+  brand: '#574e57',
   accent: '#d56942'
 }
 
