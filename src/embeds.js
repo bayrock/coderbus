@@ -1,5 +1,10 @@
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js')
 
+const colors = {
+  brand: '#8e7e9b',
+  accent: '#d56942'
+}
+
 const codeMenu = new MessageActionRow()
   .addComponents(
     new MessageButton()
@@ -13,8 +18,13 @@ const codeMenu = new MessageActionRow()
   )
 
 const codeEmbed = new MessageEmbed()
-  .setColor('#0099ff')
-  .setTitle('Code detected!')
+  .setColor(colors.brand)
+  .setTitle('Code detected')
   .setDescription('Would you like to run it?')
 
-module.exports = { codeMenu, codeEmbed }
+const richEmbed = (title, languages) => new MessageEmbed()
+  .setColor(colors.brand)
+  .setTitle(title)
+  .setDescription(languages)
+
+module.exports = { codeMenu, codeEmbed, richEmbed }

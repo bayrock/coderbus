@@ -3,7 +3,7 @@ module.exports = () => {
     const { REST } = require('@discordjs/rest')
     const { Routes } = require('discord-api-types/v10')
     const { SlashCommandBuilder } = require('@discordjs/builders')
-    const credentials = require("./credentials.json")
+    const credentials = require('./credentials.json')
 
     const commands = [
         new SlashCommandBuilder().setName('help').setDescription('View the command list'),
