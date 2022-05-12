@@ -5,7 +5,7 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 const { codeMenu, codeEmbed } = require('./components')
 const { post, fetch } = require("./post")
 const credentials = require("./credentials.json")
-const package = require("./package.json")
+const package = require("../package.json")
 
 const pistonRuntimes = []
 const otherRuntimes = {
