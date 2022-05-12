@@ -1,5 +1,4 @@
-const aplEnv = require('apl')
-const schemeEnv = require('biwascheme')
+const { VM } = require('vm2')
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
 const { codeMenu, codeEmbed, richEmbed } = require('./embeds')
@@ -44,6 +43,12 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
 })
 
+const vm = new VM({
+  timeout: 2000,
+  allowAsync: false,
+  sandbox: {aplEnv: require('apl'), schemeEnv: require('biwascheme')}
+})
+
 client.on('messageCreate', (msg) => {
   const match = msg.content.match(coderegex)
   if(!match) return
@@ -53,12 +58,12 @@ client.on('messageCreate', (msg) => {
   switch (alias.toLowerCase()) {
       case 'lisp':
       case 'scheme':
-        otherRuntimes.scheme.run.callback = () => schemeEnv.run(code).toString()
-        msg.author.request = otherRuntimes.scheme
+        otherRuntimes.scheme.run.callback = () => vm.run('schemeEnv.run(code).toString()')
+        msg.author.request = { ...otherRuntimes.scheme, code: code }
         break
       case 'apl':
-        otherRuntimes.apl.run.callback = () => aplEnv(code).toString()
-        msg.author.request = otherRuntimes.apl
+        otherRuntimes.apl.run.callback = () => vm.run('aplEnv(code).toString()')
+        msg.author.request = { ...otherRuntimes.apl, code: code }
         break
       default:
         msg.author.request = firePiston(alias, code)
@@ -82,17 +87,21 @@ async function handleButtons(interaction) {
   if (interaction.customId === 'no')
     return await interaction.message.delete()
 
-  if (interaction.customId !== 'yes')
-    return
+  if (interaction.customId === 'yes')
+    handleCodeBlocks(interaction)
+}
 
+async function handleCodeBlocks(interaction) {
   const user = interaction.message.mentions.repliedUser
   if (!user?.request) return await interaction.message.delete()
 
   try {
-    if (otherRuntimes[user.request.language])
+    if (otherRuntimes[user.request.language]) {
+      vm.sandbox.code = user.request.code
       user.request.run.output = user.request.run.callback()
-    else
-      user.request = await user.request.run.callback() 
+    } else {
+      user.request = await user.request.run.callback()
+    }
   } catch (error) {
     return await interaction.update({content: getErrorMessage(error), embeds: [], components: []})
       .catch(console.error)
