@@ -50,28 +50,23 @@ client.on('messageCreate', (msg) => {
 
   const [_, alias, code] = match
 
-  try {
-    switch (alias.toLowerCase()) {
-        case 'lisp':
-        case 'scheme':
-          otherRuntimes.scheme.run.callback = () => schemeEnv.run(code).toString()
-          msg.author.request = otherRuntimes.scheme
-          break
-        case 'apl':
-          otherRuntimes.apl.run.callback = () => aplEnv(code).toString()
-          msg.author.request = otherRuntimes.apl
-          break
-        default:
-          msg.author.request = firePiston(alias, code)
-          break
-    }
-
-    if (msg.author.request)
-      return msg.reply({embeds: [codeEmbed], components: [codeMenu]})
-  } catch (error) {
-    msg.reply(getErrorMessage(error))
-      .catch(console.error)
+  switch (alias.toLowerCase()) {
+      case 'lisp':
+      case 'scheme':
+        otherRuntimes.scheme.run.callback = () => schemeEnv.run(code).toString()
+        msg.author.request = otherRuntimes.scheme
+        break
+      case 'apl':
+        otherRuntimes.apl.run.callback = () => aplEnv(code).toString()
+        msg.author.request = otherRuntimes.apl
+        break
+      default:
+        msg.author.request = firePiston(alias, code)
+        break
   }
+
+  if (msg.author.request)
+    return msg.reply({embeds: [codeEmbed], components: [codeMenu]})
 })
 
 
@@ -91,12 +86,17 @@ async function handleButtons(interaction) {
     return
 
   const user = interaction.message.mentions.repliedUser
-  if (!user.request) return await interaction.message.delete()
+  if (!user?.request) return await interaction.message.delete()
 
-  if (otherRuntimes[user.request.language])
-    user.request.run.output = user.request.run.callback()
-  else
-    user.request = await user.request.run.callback()
+  try {
+    if (otherRuntimes[user.request.language])
+      user.request.run.output = user.request.run.callback()
+    else
+      user.request = await user.request.run.callback() 
+  } catch (error) {
+    return await interaction.update({content: getErrorMessage(error), embeds: [], components: []})
+      .catch(console.error)
+  }
 
   const { language, version, run } = user.request
   user.response = richEmbed(`Parsed ${getPrettyLanguage(language, version)}`, run.output || run.stdout || run.stderr)
