@@ -5,8 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ./src/server.js",
-    "experimental": "node server.js --experimental-fetch"
+    "start": "node ./src/server.js"
   },
   "repository": {
     "type": "git",
@@ -20,7 +19,6 @@
     "biwascheme": "^0.7.5",
     "discord-api-types": "^0.32.1",
     "discord.js": "^13.6.0",
-    "node-fetch": "^3.2.4",
     "vm2": "^3.9.9"
   }
 }

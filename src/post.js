@@ -1,4 +1,4 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
+// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
 
 async function post(url = '', data = {}) {
     // Default options are marked with *
