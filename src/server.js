@@ -59,18 +59,18 @@ client.on('messageCreate', (msg) => {
       case 'lisp':
       case 'scheme':
         otherRuntimes.scheme.run.callback = () => vm.run('schemeEnv.run(code).toString()')
-        msg.author.request = { ...otherRuntimes.scheme, code: code }
+        msg.request = { ...otherRuntimes.scheme, code: code }
         break
       case 'apl':
         otherRuntimes.apl.run.callback = () => vm.run('aplEnv(code).toString()')
-        msg.author.request = { ...otherRuntimes.apl, code: code }
+        msg.request = { ...otherRuntimes.apl, code: code }
         break
       default:
-        msg.author.request = firePiston(alias, code)
+        msg.request = firePiston(alias, code)
         break
   }
 
-  if (msg.author.request)
+  if (msg.request)
     return msg.reply({embeds: [richEmbed("Code detected", "Should the bus run it?")], components: [choiceMenu]})
 })
 
@@ -92,26 +92,26 @@ async function handleButtons(interaction) {
 }
 
 async function handleCodeBlocks(interaction) {
-  const user = interaction.message.mentions.repliedUser
-  if (!user?.request) return await interaction.message.delete()
+  const mention = await interaction.message.fetchReference()
+  if (!mention?.request) return await interaction.message.delete()
 
   try {
-    if (otherRuntimes[user.request.language]) {
-      vm.sandbox.code = user.request.code
-      user.request.run.output = user.request.run.callback()
+    if (otherRuntimes[mention.request.language]) {
+      vm.sandbox.code = mention.request.code
+      mention.request.run.output = mention.request.run.callback()
     } else {
-      user.request = await user.request.run.callback()
+      mention.request = await mention.request.run.callback()
     }
   } catch (error) {
     return await interaction.update({embeds: [alertEmbed("Error", getErrorMessage(error))], components: []})
       .catch(console.error)
   }
 
-  const { language, version, run } = user.request
-  user.response = richEmbed(`Parsed ${getPrettyLanguage(language, version)}`, run.output || run.stdout || run.stderr)
-  user.request = null
+  const { language, version, run } = mention.request
+  mention.response = richEmbed(`Parsed ${getPrettyLanguage(language, version)}`, run.output || run.stdout || run.stderr)
+  mention.request = null
 
-  await interaction.update({embeds: [user.response], components: []})
+  await interaction.update({embeds: [mention.response], components: []})
 }
 
 async function handleCommands(interaction) {
