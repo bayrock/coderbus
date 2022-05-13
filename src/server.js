@@ -40,6 +40,7 @@ function getPrettyLanguage(language, version) {
 const coderegex = /^```(.+?)\n(.+)```$/si
 
 client.on('ready', () => {
+  client.user.setActivity(`/help | v${package.version}`, { type: 'PLAYING' }) // Set bot activity
   console.log(`Logged in as ${client.user.tag}!`)
 })
 
