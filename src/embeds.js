@@ -5,7 +5,7 @@ const colors = {
   accent: '#d56942'
 }
 
-const codeMenu = new MessageActionRow()
+const choiceMenu = new MessageActionRow()
   .addComponents(
     new MessageButton()
       .setCustomId('yes')
@@ -17,14 +17,11 @@ const codeMenu = new MessageActionRow()
       .setStyle('SECONDARY'),
   )
 
-const codeEmbed = new MessageEmbed()
-  .setColor(colors.brand)
-  .setTitle('Code detected')
-  .setDescription('Would you like to run it?')
-
-const richEmbed = (title, languages) => new MessageEmbed()
-  .setColor(colors.brand)
+const baseEmbed = (title, description) => new MessageEmbed()
   .setTitle(title)
-  .setDescription(languages)
+  .setDescription(description)
 
-module.exports = { codeMenu, codeEmbed, richEmbed }
+const richEmbed = (title, description) => baseEmbed(title, description).setColor(colors.brand)
+const alertEmbed = (title, description) => baseEmbed(title, description).setColor(colors.accent)
+
+module.exports = { choiceMenu, richEmbed, alertEmbed }
