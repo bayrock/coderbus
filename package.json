@@ -1,6 +1,6 @@
 {
   "name": "coderbus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Coderbus Discord bot",
   "main": "server.js",
   "scripts": {
