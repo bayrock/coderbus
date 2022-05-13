@@ -1,7 +1,7 @@
 const { VM } = require('vm2')
 const { Client, Intents } = require('discord.js')
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] })
-const { codeMenu, codeEmbed, richEmbed } = require('./embeds')
+const { choiceMenu, richEmbed, alertEmbed } = require('./embeds')
 const { post, fetch } = require('./post')
 const credentials = require('./credentials.json')
 const package = require('../package.json')
@@ -71,7 +71,7 @@ client.on('messageCreate', (msg) => {
   }
 
   if (msg.author.request)
-    return msg.reply({embeds: [codeEmbed], components: [codeMenu]})
+    return msg.reply({embeds: [richEmbed("Code detected", "Should the bus run it?")], components: [choiceMenu]})
 })
 
 
@@ -103,7 +103,7 @@ async function handleCodeBlocks(interaction) {
       user.request = await user.request.run.callback()
     }
   } catch (error) {
-    return await interaction.update({content: getErrorMessage(error), embeds: [], components: []})
+    return await interaction.update({embeds: [alertEmbed("Error", getErrorMessage(error))], components: []})
       .catch(console.error)
   }
 
