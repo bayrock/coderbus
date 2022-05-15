@@ -1,6 +1,6 @@
 {
   "name": "coderbus",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Coderbus Discord bot",
   "main": "server.js",
   "scripts": {
@@ -20,5 +20,8 @@
     "discord-api-types": "^0.32.1",
     "discord.js": "^13.6.0",
     "vm2": "^3.9.9"
+  },
+  "devDependencies": {
+    "node-fetch": "^3.2.4"
   }
 }

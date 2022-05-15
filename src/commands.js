@@ -5,7 +5,7 @@ module.exports = () => {
         const { SlashCommandBuilder } = require('@discordjs/builders')
         const credentials = require('./credentials.json')
 
-        const commands = [
+        const globalCommands = [
         new SlashCommandBuilder().setName('help').setDescription('View the command list'),
         new SlashCommandBuilder().setName('repo').setDescription('View the GitHub repo'),
         new SlashCommandBuilder().setName('languages').setDescription('View the supported languages'),
@@ -19,11 +19,12 @@ module.exports = () => {
 
         const rest = new REST({ version: '10' }).setToken(credentials.token)
 
-        rest.put(Routes.applicationCommands(credentials.clientid), { body: commands })
+        rest.put(Routes.applicationCommands(credentials.clientid), { body: globalCommands })
                 .then(() => console.log('Successfully registered global commands.'))
                 .catch(console.error)
 
-        // rest.put(Routes.applicationGuildCommands(credentials.clientid, credentials.guildid), { body: commands })
+        // const guildCommands = []
+        // rest.put(Routes.applicationGuildCommands(credentials.clientid, credentials.guildid), { body: guildCommands })
         //         .then(() => console.log('Successfully registered guild commands.'))
         //         .catch(console.error)
 }

@@ -117,7 +117,7 @@ async function handleCodeBlocks(interaction) {
 
 async function handleCommands(interaction) {
   if (interaction.commandName === 'help') {
-    const commands = await interaction.guild.commands.fetch()
+    const commands = await client.application.commands.fetch()
     const commandList = richEmbed('Commands:', commands.map(command => `/${command.name} [${command.options.map((option) => option.name)}] - ${command.description}`).join('\n'))
     await interaction.reply({embeds: [commandList], ephemeral: true})
   }
