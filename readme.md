@@ -1,4 +1,4 @@
-# coderbus
+# coderbus ([invite](https://discord.com/oauth2/authorize?client_id=972226117362651137&permissions=0&scope=bot%20applications.commands))
 #### [Discord.js](https://discord.js.org/) bot for handling multi-paradigm code parsing and data fetching
 
 ###### Interpret/compile markdown code blocks directly from Discord..
